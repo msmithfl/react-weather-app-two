@@ -64,7 +64,6 @@ function TemperatureAndDetails() {
         <p className="font-light">
           Low:<span className="font-medium ml-1">40°</span>
         </p>
-        <p className="font-light">|</p>
       </div>
     </div>
   );
