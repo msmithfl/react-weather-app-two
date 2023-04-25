@@ -1,3 +1,5 @@
+import { DateTime } from "luxon";
+
 const API_KEY = "3acc2f32fddc9aca1d1f4293f635d761";
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
 
@@ -40,12 +42,50 @@ const formatCurrentWeather = (data) => {
   };
 };
 
+const formatForecastWeather = (data) => {
+  let { timezone, daily, hourly } = data;
+  daily = daily.slice(1, 6).map((d) => {
+    return {
+      title: formatToLocalTime(d.dt, timezone, "ccc"),
+      temp: d.tmep.day,
+      icon: d.weather[0].icon,
+    };
+  });
+
+  hourly = hourly.slice(1, 6).map((d) => {
+    return {
+      title: formatToLocalTime(d.dt, timezone, "hh:mm a"),
+      temp: d.tmep.day,
+      icon: d.weather[0].icon,
+    };
+  });
+
+  return { timezone, daily, hourly };
+};
+
 const getFormattedWeatherData = async (searchParams) => {
   const formattedCurrentWeather = await getWeatherData(
     "weather",
     searchParams
   ).then(formatCurrentWeather);
-  return formattedCurrentWeather;
+
+  const { lat, lon } = formatCurrentWeather;
+
+  const formattedForecastWeather = await getWeatherData("forecast/hourly", {
+    lat,
+    lon,
+    //exclude: "current,minutely,alerts",
+    //units: searchParams.units,
+  }).then(formatForecastWeather);
+
+  return { ...formattedCurrentWeather, ...formattedForecastWeather };
 };
+
+// using luxon
+const formatToLocalTime = (
+  secs,
+  zone,
+  format = "cccc, dd LLL yyyy' | Local time: 'hh:mm a"
+) => DateTime.fromSeconds(secs).setZone(zone).toFormat(format);
 
 export default getFormattedWeatherData;
